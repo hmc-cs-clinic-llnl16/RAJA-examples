@@ -15,41 +15,23 @@ if (RAJA_DIR)
   find_package(RAJA QUIET)
   include_directories(${RAJA_INCLUDE_DIR})
 else ()
-  if (NOT RAJA_GIT_TAG)
-    set(RAJA_GIT_TAG develop)
+  if (NOT EXISTS ${PROJECT_SOURCE_DIR}/RAJA/CMakeLists.txt)
+    message(FATAL_ERROR "\
+RAJA_DIR was not specified, and the RAJA submodule was not found. \
+Please run the following commands:\n\
+git submodule init\n \
+git submodule update\n")
   endif()
-  if (NOT RAJA_GIT_REPO)
-    set(RAJA_GIT_REPO https://github.com/LLNL/RAJA.git )
-  endif()
-  ExternalProject_Add(
-      raja
-      GIT_REPOSITORY ${RAJA_GIT_REPO}
-      GIT_TAG ${RAJA_GIT_TAG}
-      CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_BUILD_TYPE=Release
-        -DRAJA_ENABLE_NESTED=On
-        -DRAJA_ENABLE_TESTS=Off
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/tpl
-      LOG_DOWNLOAD ON
-      LOG_CONFIGURE ON
-      LOG_BUILD ON)
-
-  ExternalProject_Get_Property(raja install_dir)
-  set(RAJA_DIR ${install_dir}/share/cmake/raja/)
-  include_directories(${install_dir}/include)
-
-  add_library(RAJA      UNKNOWN IMPORTED)
-  set_target_properties(RAJA PROPERTIES
-    IMPORTED_LOCATION ${install_dir}/lib/libRAJA.a
-  )
-  add_dependencies(RAJA      raja)
+  add_subdirectory(RAJA)
+  include_directories(${PROJECT_BINARY_DIR}/RAJA/include)
+  include_directories(${PROJECT_SOURCE_DIR}/RAJA/include)
 endif()
 
 if(RAJA_ENABLE_CUDA)
   find_package(CUDA)
   if(CUDA_FOUND)
     message(STATUS "CUDA Enabled")
+    list(APPEND RAJA_NVCC_FLAGS -Xcompiler ${OpenMP_CXX_FLAGS})
     set (CUDA_NVCC_FLAGS ${RAJA_NVCC_FLAGS})
     set (CUDA_PROPAGATE_HOST_FLAGS OFF)
     include_directories(${CUDA_INCLUDE_DIRS})

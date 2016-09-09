@@ -1,7 +1,5 @@
 include_directories(..)
 
-add_definitions(-DRAJA_ENABLE_NESTED)
-
 set(KRIPKE_SRC 
     Directions.cpp  
     Grid.cpp  

@@ -41,6 +41,8 @@
 #
 ###############################################################################
 
+add_definitions(-DRAJA_ENABLE_NESTED=1)
+
 include_directories(.)
 
 add_subdirectory(Kripke)
